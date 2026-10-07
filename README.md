@@ -1,19 +1,14 @@
-# CodeForge — GitHub Pages
+# CodeForge Autonomous AI
 
-Cette version est autonome côté navigateur et peut être publiée directement avec GitHub Pages.
+Projet original conservé tel quel.
 
-## Publication
-1. Mets `index.html` et `.nojekyll` à la racine de ton dépôt.
-2. Dans GitHub : **Settings → Pages**.
-3. Choisis **Deploy from a branch**, puis `main` et `/ (root)`.
-4. Enregistre.
+## GitHub
+Ce dépôt est une application Next.js full-stack. GitHub peut héberger le code du projet, mais GitHub Pages ne peut pas exécuter les routes API Next.js ni PostgreSQL.
 
-Le dossier `original/` contient le projet Next.js original et n'est pas nécessaire au fonctionnement de la version statique.
+Pour conserver toutes les fonctionnalités, utilisez un hébergeur capable d’exécuter Next.js et de fournir PostgreSQL.
 
-## Fonctionnalités
-- création de projets dans le navigateur
-- éditeur de fichiers
-- aperçu HTML/CSS/JS
-- sauvegarde locale
-- import/export ZIP
-- téléchargement de `index.html`
+## Local
+```bash
+npm install
+npm run dev
+```
