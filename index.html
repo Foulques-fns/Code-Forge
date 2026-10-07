@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>CodeForge — IA autonome de développement</title>
+<meta name="description" content="CodeForge — générateur de projets web directement dans le navigateur.">
+<meta name="theme-color" content="#060609">
+<style>
+:root{--bg:#060609;--panel:#0d0d12;--panel2:#111118;--line:#25252e;--text:#f4f4f5;--muted:#a1a1aa;--violet:#8b7cff;--green:#55e6a5;--red:#ff6b81}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 30% 0,#171326 0,#060609 42%);color:var(--text);font:14px Inter,system-ui,sans-serif;height:100vh;overflow:hidden}button,input,textarea{font:inherit}button{cursor:pointer}
+.app{display:grid;grid-template-rows:58px 1fr;height:100vh}.top{border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 18px;gap:14px;background:#09090d}.logo{font-weight:800;font-size:18px}.logo span{color:var(--violet)}.status{font-size:11px;color:var(--green);border:1px solid #244d3c;padding:5px 9px;border-radius:999px}.top-actions{margin-left:auto;display:flex;gap:8px}.btn{border:1px solid var(--line);background:#111118;color:var(--text);border-radius:8px;padding:8px 11px}.btn:hover{border-color:#49495a;background:#17171f}.btn.primary{background:var(--violet);border-color:var(--violet);color:white}.layout{display:grid;grid-template-columns:240px 1fr 300px;min-height:0}.panel{background:rgba(13,13,18,.94);border-right:1px solid var(--line);min-height:0}.panel.right{border-left:1px solid var(--line);border-right:0}.panel-title{padding:13px 14px;border-bottom:1px solid var(--line);font-weight:700;font-size:12px;color:#ddd}.projects{padding:8px}.project{padding:10px;border-radius:8px;color:var(--muted);cursor:pointer;margin-bottom:3px}.project:hover,.project.active{background:#191921;color:white}.main{display:grid;grid-template-rows:52px 1fr 150px;min-width:0;min-height:0}.tabs{border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 12px;gap:5px}.tab{padding:8px 12px;border-radius:7px;color:var(--muted);background:transparent;border:0}.tab.active{background:#1a1924;color:white}.work{display:grid;grid-template-columns:250px 1fr;min-height:0}.files{border-right:1px solid var(--line);overflow:auto}.file{display:flex;align-items:center;gap:8px;padding:7px 10px;color:var(--muted);font-size:12px;border:0;background:transparent;width:100%;text-align:left}.file:hover,.file.active{background:#191921;color:white}.editor{display:flex;flex-direction:column;min-width:0;min-height:0}.editorbar{height:38px;border-bottom:1px solid var(--line);display:flex;align-items:center;padding:0 12px;color:var(--muted);font-size:11px}.code{width:100%;height:100%;resize:none;border:0;outline:0;background:#08080c;color:#d4d4d8;padding:15px;font:12px/1.6 "JetBrains Mono",Consolas,monospace;tab-size:2}.preview{width:100%;height:100%;border:0;background:white}.bottom{border-top:1px solid var(--line);display:grid;grid-template-columns:1fr 320px;min-height:0}.timeline{padding:10px 14px;overflow:auto;font-size:11px;color:var(--muted)}.chat{border-left:1px solid var(--line);display:flex;flex-direction:column}.messages{overflow:auto;padding:9px;flex:1}.msg{padding:8px 10px;border-radius:8px;margin-bottom:7px;line-height:1.4}.msg.user{background:#211d39}.msg.ai{background:#15151b;color:#c8c8d0}.chatbar{display:flex;padding:8px;border-top:1px solid var(--line);gap:6px}.chatbar input,.prompt input{background:#0a0a0e;border:1px solid var(--line);color:white;border-radius:7px;padding:9px;outline:none;width:100%}.hero{padding:18px}.hero h2{margin:0 0 8px;font-size:18px}.hero p{color:var(--muted);line-height:1.5}.prompt{display:flex;gap:8px;margin:12px 0}.prompt button{white-space:nowrap}.right-content{padding:12px;color:var(--muted);font-size:12px;overflow:auto}.stat{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line)}.empty{display:flex;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;padding:30px}.notice{background:#17131f;border:1px solid #352b54;color:#cfc8ef;padding:10px;border-radius:8px;line-height:1.45;font-size:11px}.hidden{display:none}@media(max-width:900px){.layout{grid-template-columns:190px 1fr}.panel.right{display:none}.work{grid-template-columns:180px 1fr}.bottom{grid-template-columns:1fr}.chat{display:none}}@media(max-width:620px){.layout{grid-template-columns:1fr}.panel.left{display:none}.work{grid-template-columns:1fr}.files{display:none}.top .status{display:none}}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="top">
+  <div class="logo">Code<span>Forge</span></div><div class="status">● navigateur actif</div>
+  <div class="top-actions"><button class="btn" id="newBtn">Nouveau</button><button class="btn" id="importBtn">Importer</button><button class="btn" id="exportBtn">Exporter</button><button class="btn primary" id="previewBtn">Aperçu</button><input id="zipInput" type="file" accept=".zip" class="hidden"></div>
+</header>
+<div class="layout">
+  <aside class="panel left"><div class="panel-title">PROJETS</div><div id="projects" class="projects"></div></aside>
+  <main class="main">
+    <div class="tabs"><button class="tab active" data-tab="code">Code</button><button class="tab" data-tab="preview">Aperçu</button><button class="tab" data-tab="activity">Activité</button><div style="margin-left:auto;color:#666;font-size:11px" id="projectName">Nouveau projet</div></div>
+    <div class="work" id="codeView">
+      <div class="files" id="files"></div>
+      <div class="editor"><div class="editorbar" id="fileName">Aucun fichier</div><textarea id="editor" class="code" spellcheck="false"></textarea></div>
+    </div>
+    <div class="work hidden" id="previewView"><div style="grid-column:1/-1"><iframe id="iframe" class="preview" sandbox="allow-scripts allow-forms"></iframe></div></div>
+    <div class="work hidden" id="activityView"><div class="empty" style="grid-column:1/-1"><div><h3>Activité</h3><p id="activityText">Aucune génération.</p></div></div></div>
+    <div class="bottom"><div class="timeline" id="timeline"></div><div class="chat"><div class="messages" id="messages"></div><div class="chatbar"><input id="chatInput" placeholder="Demander une modification…"><button class="btn primary" id="askBtn">Envoyer</button></div></div></div>
+  </main>
+  <aside class="panel right"><div class="panel-title">GÉNÉRATEUR</div><div class="right-content">
+    <div class="notice">Cette version fonctionne directement sur GitHub Pages. Les projets et fichiers sont stockés localement dans ton navigateur.</div>
+    <div class="hero"><h2>Créer un projet</h2><p>Décris ce que tu veux construire. CodeForge prépare une vraie base HTML/CSS/JS éditable.</p>
+    <div class="prompt"><input id="prompt" placeholder="Ex. portfolio moderne avec formulaire"><button class="btn primary" id="generateBtn">Générer</button></div></div>
+    <div class="stat"><span>Fichiers</span><b id="fileCount">0</b></div><div class="stat"><span>Taille</span><b id="size">0 o</b></div><div class="stat"><span>Stockage</span><b>local</b></div>
+    <button class="btn" id="downloadHtml" style="width:100%;margin-top:14px">Télécharger index.html</button>
+  </div></aside>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+const KEY="codeforge-github-projects-v1";
+let state={projects:[],current:null,selected:null};
+const $=id=>document.getElementById(id);
+function esc(s){return s.replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function load(){try{state.projects=JSON.parse(localStorage.getItem(KEY)||"[]")}catch{state.projects=[]}if(!state.projects.length) newProject("Bienvenue dans CodeForge"); else openProject(state.projects[0].id)}
+function save(){localStorage.setItem(KEY,JSON.stringify(state.projects));renderProjects()}
+function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+"-"+Math.random()}
+function template(desc){
+const title=desc.replace(/[<>"']/g,"").slice(0,70)||"Mon projet";
+return {
+"index.html":`<!doctype html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${title}</title><link rel="stylesheet" href="style.css"></head>
+<body><main class="container"><div class="badge">CODEFORGE</div><h1>${title}</h1><p class="lead">${desc||"Un projet web moderne."}</p><button id="action">Commencer</button><p id="result"></p></main><script src="app.js"><\/script></body></html>`,
+"style.css":`*{box-sizing:border-box}body{margin:0;min-height:100vh;font-family:Inter,system-ui,sans-serif;background:linear-gradient(135deg,#09090f,#17132b);color:#fff}.container{max-width:900px;margin:auto;padding:12vh 28px;text-align:center}.badge{display:inline-block;padding:7px 12px;border:1px solid #6d5ce7;border-radius:999px;color:#b7adff;font-size:12px;letter-spacing:.12em}h1{font-size:clamp(38px,7vw,76px);margin:24px 0 12px;line-height:1.02}.lead{max-width:650px;margin:0 auto 30px;color:#b7b7c5;font-size:18px;line-height:1.6}button{border:0;border-radius:10px;padding:13px 20px;background:#8b7cff;color:white;font-weight:700;cursor:pointer}#result{color:#55e6a5;margin-top:20px}`,
+"app.js":`document.getElementById("action").addEventListener("click",()=>{document.getElementById("result").textContent="Ça fonctionne !"});`
+}}
+function newProject(desc="Nouveau projet"){const p={id:uid(),name:"Projet "+(state.projects.length+1),description:desc,files:template(desc),createdAt:new Date().toISOString()};state.projects.unshift(p);state.current=p.id;state.selected="index.html";save();render()}
+function current(){return state.projects.find(p=>p.id===state.current)}
+function openProject(id){state.current=id;const p=current();state.selected=Object.keys(p.files)[0]||null;render()}
+function renderProjects(){ $("projects").innerHTML=state.projects.map(p=>`<div class="project ${p.id===state.current?"active":""}" data-id="${p.id}">${esc(p.name)}</div>`).join("")||'<div class="empty">Aucun projet</div>';$("projects").querySelectorAll(".project").forEach(x=>x.onclick=()=>openProject(x.dataset.id))}
+function renderFiles(){const p=current();$("files").innerHTML=Object.keys(p.files).sort().map(f=>`<button class="file ${f===state.selected?"active":""}" data-file="${esc(f)}">▣ ${esc(f)}</button>`).join("");$("files").querySelectorAll(".file").forEach(x=>x.onclick=()=>{state.selected=x.dataset.file;renderEditor()})}
+function renderEditor(){const p=current();const f=state.selected;$("projectName").textContent=p?.name||"";$("fileName").textContent=f||"Aucun fichier";$("editor").value=f?p.files[f]:"";$("editor").disabled=!f}
+function renderStats(){const p=current();const n=p?Object.keys(p.files).length:0;const bytes=p?Object.values(p.files).reduce((a,x)=>a+x.length,0):0;$("fileCount").textContent=n;$("size").textContent=bytes<1024?bytes+" o":(bytes/1024).toFixed(1)+" ko"}
+function render(){renderProjects();renderFiles();renderEditor();renderStats();renderTimeline()}
+function renderTimeline(msg){if(msg)$("activityText").textContent=msg;$("timeline").innerHTML=`<div>✓ Interface chargée</div><div>✓ Stockage local actif</div><div>✓ Éditeur prêt</div>`}
+function setTab(t){document.querySelectorAll(".tab").forEach(x=>x.classList.toggle("active",x.dataset.tab===t));$("codeView").classList.toggle("hidden",t!=="code");$("previewView").classList.toggle("hidden",t!=="preview");$("activityView").classList.toggle("hidden",t!=="activity");if(t==="preview")preview()}
+$("editor").addEventListener("input",()=>{const p=current();if(p&&state.selected){p.files[state.selected]=$("editor").value;save();renderStats()}})
+document.querySelectorAll(".tab").forEach(x=>x.onclick=()=>setTab(x.dataset.tab));
+$("generateBtn").onclick=()=>{const d=$("prompt").value.trim();if(!d)return alert("Décris ton projet.");newProject(d);$("prompt").value="";renderTimeline("Projet généré localement à partir de ta demande.")};
+$("newBtn").onclick=()=>newProject();
+$("previewBtn").onclick=()=>{setTab("preview");preview()};
+function preview(){const p=current();if(!p)return;let h=p.files["index.html"]||"";const css=p.files["style.css"]||"";const js=p.files["app.js"]||"";h=h.replace(/<link[^>]+href=["']style\.css["'][^>]*>/i,`<style>${css}</style>`);h=h.replace(/<script[^>]+src=["']app\.js["'][^>]*><\/script>/i,`<script>${js.replace(/<\/script>/gi,"<\\\\/script>")}<\/script>`);$("iframe").srcdoc=h}
+$("downloadHtml").onclick=()=>{const p=current();if(!p)return;const blob=new Blob([p.files["index.html"]||""],{type:"text/html"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="index.html";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$("exportBtn").onclick=async()=>{const p=current();if(!p)return;if(!window.JSZip)return alert("Le module ZIP n'est pas chargé. Vérifie ta connexion.");const z=new JSZip();Object.entries(p.files).forEach(([n,c])=>z.file(n,c));const blob=await z.generateAsync({type:"blob"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=(p.name||"codeforge-project").replace(/[^a-z0-9-_]+/gi,"-")+".zip";a.click()}
+$("importBtn").onclick=()=>$("zipInput").click();
+$("zipInput").onchange=async e=>{const file=e.target.files[0];if(!file)return;try{const z=await JSZip.loadAsync(file);const files={};for(const n of Object.keys(z.files)){if(!z.files[n].dir)files[n]=await z.files[n].async("string")}const p={id:uid(),name:file.name.replace(/\.zip$/i,""),description:"Projet importé",files,createdAt:new Date().toISOString()};state.projects.unshift(p);state.current=p.id;state.selected=Object.keys(files)[0]||null;save();render()}catch(err){alert("ZIP invalide ou impossible à lire.")}e.target.value=""}
+$("askBtn").onclick=ask;$("chatInput").addEventListener("keydown",e=>{if(e.key==="Enter")ask()});
+function ask(){const q=$("chatInput").value.trim();if(!q)return;addMsg(q,"user");$("chatInput").value="";const lower=q.toLowerCase();let answer="Je peux modifier les fichiers du projet directement depuis l’éditeur. ";if(lower.includes("titre")&&current()){answer+="Sélectionne index.html et modifie le titre, ou demande-moi une modification précise."; }else if(lower.includes("css")||lower.includes("couleur"))answer+="Ouvre style.css pour appliquer le changement, puis utilise Aperçu.";else answer+="Dans cette version GitHub Pages, les modifications restent locales au navigateur afin de fonctionner sans backend.";addMsg(answer,"ai")}
+function addMsg(t,type){const d=document.createElement("div");d.className="msg "+type;d.textContent=t;$("messages").appendChild(d);$("messages").scrollTop=$("messages").scrollHeight}
+load();
+</script>
+</body>
+</html>
