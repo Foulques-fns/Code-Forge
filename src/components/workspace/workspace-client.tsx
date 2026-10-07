@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  ArrowLeft, Ban, Braces, CircleAlert, Download, Eye, FileCode2, Hammer, ListTree, Loader2,
+  ArrowLeft, Ban, Braces, CircleAlert, Download, Eye, FileCode2, GitBranch, Hammer, ListTree, Loader2,
   PanelRight, SendHorizonal, Settings2, Square, Trash2, Activity,
 } from "lucide-react";
 import { EngineBadge } from "../engine-badge";
@@ -486,6 +486,13 @@ export function WorkspaceClient({ initial, autostart }: { initial: WorkspaceData
             />
           )}
         </div>
+        <a
+          className={`btn !px-3.5 !py-2 ${!hasFiles ? "pointer-events-none opacity-40" : ""}`}
+          href={hasFiles ? `/api/projects/${project.id}/github-pages` : undefined}
+          title={hasFiles ? "Export prêt pour GitHub Pages (.nojekyll, guide, et workflow Actions si un build est requis)" : "Rien à exporter pour l'instant"}
+        >
+          <GitBranch size={14} /> <span className="hidden sm:inline">Pages</span>
+        </a>
         <a
           className={`btn !px-3.5 !py-2 ${!hasFiles ? "pointer-events-none opacity-40" : "btn-primary"}`}
           href={hasFiles ? `/api/projects/${project.id}/export` : undefined}

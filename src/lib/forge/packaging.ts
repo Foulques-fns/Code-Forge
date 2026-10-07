@@ -6,6 +6,120 @@ import { VFS, languageOf } from "./vfs";
 /*  Imports strip junk (node_modules, caches, logs...).                */
 /* ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ */
+/*  GitHub Pages export — a folder you can push and publish.           */
+/*  Static projects deploy as-is; build-requiring projects get a real  */
+/*  GitHub Actions workflow (npm ci → build → deploy-pages).           */
+/* ------------------------------------------------------------------ */
+
+const PAGES_WORKFLOW = (buildOutDir: string) => `name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies (reproductible)
+        run: npm ci || npm install
+      - name: Build
+        run: npm run build
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Adapter ici si le dossier de sortie réel diffère (dist, build, out...)
+          path: ${buildOutDir}
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: \${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+`;
+
+function pagesReadme(opts: { name: string; staticOk: boolean; entry: string | null; workflow: boolean; outDir: string | null }): string {
+  const { name, staticOk, entry, workflow } = opts;
+  const L: string[] = [];
+  L.push(`# ${name} — Déploiement GitHub Pages`, "");
+  L.push("Ce dossier est prêt à être publié gratuitement via GitHub Pages.", "");
+  if (staticOk) {
+    L.push("## Mode statique (aucun build requis)", "");
+    L.push("1. Créez un dépôt public sur GitHub et poussez ce dossier :", "");
+    L.push("   ```bash", "   git init && git add -A && git commit -m \"Initial commit\"", "   git remote add origin https://github.com/<compte>/<repo>.git", "   git push -u origin main", "   ```");
+    L.push("2. Sur GitHub : **Settings → Pages → Source : Deploy from a branch** → branche `main`, dossier `/ (root)` → **Save**.");
+    L.push(`3. Le site est en ligne en ~1 min à l'adresse \`https://<compte>.github.io/<repo>/\``);
+    if (entry) L.push(`   (page d'entrée : \`${entry}\` — chemins relatifs, servis tels quels).`);
+    L.push("", "Le fichier \`.nojekyll\` désactive Jekyll (évite toute transformation de vos fichiers).", "");
+  } else {
+    L.push("## Mode avec build (CI incluse)", "");
+    L.push("Ce projet nécessite un build (`npm install && npm run build`). Un workflow GitHub Actions complet est inclus :", "");
+    L.push("1. Poussez ce dossier dans un dépôt public.", "2. **Settings → Pages → Source : GitHub Actions**.", "3. À chaque push sur `main`, le workflow \`.github/workflows/deploy-pages.yml` installe, build et déploie automatiquement le site.", "");
+  }
+  if (workflow) L.push(`> Workflow inclus : build Node 20 → upload de \`${opts.outDir ?? "dist"}\` → déploiement Pages.`);
+  if (entry) L.push("", "`404.html` est une copie de la page : utile si l'application gère du routage côté client.");
+  L.push("", "_Export préparé par CodeForge depuis les fichiers réels du projet._", "");
+  return L.join("\n");
+}
+
+export function buildGitHubPages(vfs: VFS, projectName: string): {
+  files: { path: string; content: string }[];
+  staticOk: boolean;
+  entry: string | null;
+  workflowAdded: boolean;
+  outDir: string | null;
+} {
+  const files = [...vfs.entries()];
+  const entry = findHtmlEntry(vfs);
+  const staticOk = buildPreview(vfs).ok;
+  let workflowAdded = false;
+  let outDir: string | null = null;
+
+  // Real-world conveniences
+  if (!files.some((f) => f.path === ".nojekyll")) {
+    files.unshift({ path: ".nojekyll", content: "" });
+  }
+  if (entry && !files.some((f) => f.path === "404.html")) {
+    files.push({ path: "404.html", content: vfs.read(entry)! });
+  }
+
+  // Build-requiring project → include a REAL CI workflow
+  if (!staticOk && vfs.has("package.json")) {
+    try {
+      const pkg = JSON.parse(vfs.read("package.json")!);
+      if (pkg.scripts?.build && !files.some((f) => f.path === ".github/workflows/deploy-pages.yml")) {
+        const viteCfg = ["vite.config.ts", "vite.config.js", "vite.config.mjs"].map((p) => vfs.read(p)).find(Boolean) ?? "";
+        outDir = /["'](?:dist|build|out)["']/.test(viteCfg) ? (viteCfg.match(/["'](dist|build|out)["']/)?.[1] ?? "dist") : "dist";
+        files.push({ path: ".github/workflows/deploy-pages.yml", content: PAGES_WORKFLOW(outDir) });
+        workflowAdded = true;
+      }
+    } catch {
+      /* no valid pkg */
+    }
+  }
+
+  files.push({ path: "GITHUB_PAGES.md", content: pagesReadme({ name: projectName, staticOk, entry, workflow: workflowAdded, outDir }) });
+  return { files, staticOk, entry, workflowAdded, outDir };
+}
+
 export async function buildZip(vfs: VFS): Promise<{ buffer: Buffer; bytes: number }> {
   const zip = new JSZip();
   for (const { path, content } of vfs.entries()) {
